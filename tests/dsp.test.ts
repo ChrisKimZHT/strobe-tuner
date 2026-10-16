@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PitchDetector } from 'pitchy';
-import { PhaseDemodulator, frequency, TargetTracker, TAU } from '../src/dsp.ts';
+import { PhaseDemodulator, frequency, TargetTracker, TAU } from '../src/audio/dsp.ts';
 
 function measure(target: number, delta: number, sr = 48000, harmonics = false) {
   const dsp = new PhaseDemodulator(sr, target);
