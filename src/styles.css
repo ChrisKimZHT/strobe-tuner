@@ -68,8 +68,19 @@ button:focus-visible, a:focus-visible {
 .field-label { font-size: 12px; font-weight: 500; margin-bottom: 10px; }
 .mode-option { display: inline-flex; align-items: center; gap: 6px; }
 .mode-range { color: var(--mantine-color-dimmed); font-size: 11px; }
-.note-selectors { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
-.note-selectors .mantine-InputWrapper-label { font-size: 12px; margin-bottom: 5px; }
+.note-controls { margin-top: 20px; }
+.piano-keyboard { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; width: 100%; max-width: 360px; height: 132px; margin-inline: auto; isolation: isolate; }
+.piano-key { display: flex; align-items: flex-end; justify-content: center; min-width: 0; padding: 0 0 12px; border: 1px solid var(--mantine-color-default-border); border-radius: 0 0 6px 6px; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.piano-key--white { grid-row: 1; background: var(--mantine-color-white); color: var(--mantine-color-text); }
+.piano-key--white:not(:disabled):not([data-active]):hover { background: var(--mantine-color-blue-0); }
+.piano-key--black { position: absolute; top: 0; z-index: 1; width: 10%; height: 72%; transform: translateX(-50%); padding-bottom: 10px; border-color: var(--mantine-color-dark-7); background: var(--mantine-color-dark-7); color: var(--mantine-color-white); font-size: 11px; }
+.piano-key--black:not(:disabled):not([data-active]):hover { background: var(--mantine-color-dark-5); }
+.piano-key:disabled { background: var(--mantine-color-gray-1); color: var(--mantine-color-gray-5); cursor: default; }
+.piano-key--black:disabled { background: var(--mantine-color-gray-6); border-color: var(--mantine-color-gray-6); color: var(--mantine-color-gray-4); }
+.piano-key[data-active] { background: var(--mantine-primary-color-filled); border-color: var(--mantine-primary-color-filled); color: var(--mantine-color-white); }
+.piano-key:focus-visible { z-index: 2; outline-offset: -3px; }
+.octave-control { margin-top: 22px; }
+.octave-slider { padding: 4px 8px 24px; }
 .lock-button { height: 38px; margin-top: 15px; font-size: 12px; }
 .calibration-settings { margin-top: 23px; border-top: 1px solid var(--mantine-color-default-border); }
 .calibration-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -77,8 +88,6 @@ button:focus-visible, a:focus-visible {
 .calibration-input { width: 150px; }
 .calibration-input input { text-align: center; font-size: 15px; font-variant-numeric: tabular-nums; }
 .a4-label, .hz-label { font-size: 11px; color: var(--mantine-color-dimmed); }
-.calibration-slider { margin-top: 24px; }
-.range-labels { display: flex; justify-content: space-between; margin-top: 12px; font-size: 10px; color: var(--mantine-color-dimmed); font-variant-numeric: tabular-nums; }
 .calibration-presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 16px; }
 .calibration-presets button { height: 35px; font-size: 12px; padding-inline: 8px; }
 

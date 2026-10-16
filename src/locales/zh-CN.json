@@ -46,7 +46,6 @@
     "locked": "目标已锁定",
     "calibration": "参考音高",
     "a4": "A4 / Hz",
-    "calibrationSlider": "A4 参考音高滑块",
     "presets": "常用参考音高",
     "setA4": "参考音高设为 {{value}} Hz"
   },

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PitchDetector } from 'pitchy';
-import { PhaseDemodulator, frequency, TargetTracker, TAU } from '../src/audio/dsp.ts';
+import { PhaseDemodulator, frequency, MAX_MIDI, MIN_MIDI, TargetTracker, TAU } from '../src/audio/dsp.ts';
 
 function measure(target: number, delta: number, sr = 48000, harmonics = false) {
   const dsp = new PhaseDemodulator(sr, target);
@@ -15,7 +15,7 @@ function measure(target: number, delta: number, sr = 48000, harmonics = false) {
   return { drift: (end - start) / TAU / 3, dsp };
 }
 for (const sr of [44100, 48000]) {
-  for (const midi of [40, 45, 69, 88]) {
+  for (const midi of [MIN_MIDI, 40, 45, 69, 88, MAX_MIDI]) {
     const target = frequency(midi);
     for (const delta of [0, -1, 1, target * (2 ** (-1/1200) - 1), target * (2 ** (1/1200) - 1)]) {
       test(`phase ${sr}Hz MIDI ${midi}, delta ${delta.toFixed(6)}Hz`, () => {
@@ -30,7 +30,7 @@ for (const sr of [44100, 48000]) {
 }
 test('strong harmonics: same DSP phase and actual Pitchy fundamental', () => {
   const detector = PitchDetector.forFloat32Array(4096);
-  for (const midi of [40,45,69]) {
+  for (const midi of [MIN_MIDI,40,45,69,MAX_MIDI]) {
     const f = frequency(midi), samples = new Float32Array(4096);
     for (let n=0;n<samples.length;n++) {
       const p=TAU*(f+1)*n/48000;
@@ -39,7 +39,10 @@ test('strong harmonics: same DSP phase and actual Pitchy fundamental', () => {
     const [hz,clarity]=detector.findPitch(samples,48000);
     const {drift,dsp}=measure(f,1,48000,true);
     console.log(`harmonics MIDI=${midi} pitch=${hz.toFixed(5)} clarity=${clarity.toFixed(5)} drift=${drift.toFixed(7)} valid=${dsp.reliable}`);
-    assert.ok(Math.abs(hz-(f+1))<.1); assert.ok(clarity>.9);
+    // At high notes, short-period interpolation is evaluated in musical cents.
+    if (midi <= 69) assert.ok(Math.abs(hz-(f+1))<.1);
+    else assert.ok(Math.abs(1200 * Math.log2(hz / (f + 1))) < 1);
+    assert.ok(clarity>.9);
     assert.ok(Math.abs(drift-1)<.002); assert.ok(dsp.reliable);
   }
 });
@@ -96,8 +99,36 @@ test('target stability, hysteresis, octave persistence, A4 and boundary margin',
   for(let n=0;n<5;n++) assert.equal(t.update(220,1,.1,440),false);
   assert.equal(t.update(220,1,.1,440),true); assert.equal(t.midi,57);
   assert.equal(t.update(220,.1,.1,440),false);
-  for(const [m,a] of [[39.5,430],[88.5,450]]) {
+  for(const [m,a,expected] of [[MIN_MIDI-.5,430,MIN_MIDI],[MAX_MIDI+.5,450,MAX_MIDI]]) {
     const b=new TargetTracker(); for(let n=0;n<3;n++) b.update(frequency(m,a),1,.1,a);
-    assert.equal(b.midi,Math.max(40,Math.min(88,Math.round(m))));
+    assert.equal(b.midi,expected);
+  }
+});
+
+test('identifies every note from C2 to B6 at supported sample rates and reference pitches', () => {
+  const detector = PitchDetector.forFloat32Array(4096);
+  const samples = new Float32Array(4096);
+  for (const sampleRate of [44100, 48000]) {
+    for (const a4 of [430, 440, 450]) {
+      for (let midi = 36; midi <= 95; midi++) {
+        const target = frequency(midi, a4);
+        for (let n = 0; n < samples.length; n++) samples[n] = 0.3 * Math.cos(TAU * target * n / sampleRate);
+        const [hz, clarity] = detector.findPitch(samples, sampleRate);
+        assert.ok(Math.abs(1200 * Math.log2(hz / target)) < 1, `MIDI ${midi}, ${sampleRate} Hz, A4=${a4}`);
+        assert.ok(clarity >= 0.9);
+        const tracker = new TargetTracker();
+        for (let frame = 0; frame < 3; frame++) tracker.update(hz, clarity, 0.2, a4);
+        assert.equal(tracker.acquired, true);
+        assert.equal(tracker.midi, midi);
+      }
+    }
+  }
+});
+
+test('rejects pitches outside the C2–B6 identification margin', () => {
+  for (const midi of [MIN_MIDI - 0.61, MAX_MIDI + 0.61]) {
+    const tracker = new TargetTracker();
+    for (let frame = 0; frame < 10; frame++) assert.equal(tracker.update(frequency(midi), 1, 0.2, 440), false);
+    assert.equal(tracker.acquired, false);
   }
 });

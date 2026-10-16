@@ -1,6 +1,6 @@
 export const TAU = 2 * Math.PI;
-export const MIN_MIDI = 40;
-export const MAX_MIDI = 88;
+export const MIN_MIDI = 36;
+export const MAX_MIDI = 95;
 export const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 export const clampMidi = (midi: number) => Math.max(MIN_MIDI, Math.min(MAX_MIDI, Math.round(midi)));
 export const frequency = (midi: number, a4 = 440) => a4 * 2 ** ((midi - 69) / 12);
@@ -81,7 +81,7 @@ export class TargetTracker {
 
   update(hz: number, clarity: number, rms: number, a4: number) {
     const m = 69 + 12 * Math.log2(hz / a4);
-    if (!Number.isFinite(m) || m < 39.4 || m > 88.6 || clarity < 0.9 || rms < 0.002) {
+    if (!Number.isFinite(m) || m < MIN_MIDI - 0.6 || m > MAX_MIDI + 0.6 || clarity < 0.9 || rms < 0.002) {
       this.reset();
       return false;
     }

@@ -1,6 +1,6 @@
 import workletUrl from './tuner-worklet.ts?worker&url';
 import { AudioSession } from './AudioSession';
-import { frequency, TargetTracker } from './dsp';
+import { frequency, MAX_MIDI, MIN_MIDI, TargetTracker } from './dsp';
 import type { PhaseMessage, PitchRequest, PitchResult, ProcessorMessage } from './messages';
 import { DEFAULT_SETTINGS, type Settings } from '../settings';
 
@@ -109,7 +109,8 @@ export class TunerEngine {
         if (data.revision !== this.revision || this.status !== 'running') return;
         this.lastPitch = performance.now();
         const midi = 69 + 12 * Math.log2(data.hz / this.settings.a4);
-        this.pitchGood = Number.isFinite(midi) && data.clarity >= 0.9 && data.rms > 0.002 && midi >= 39.4 && midi <= 88.6;
+        this.pitchGood = Number.isFinite(midi) && data.clarity >= 0.9 && data.rms > 0.002 &&
+          midi >= MIN_MIDI - 0.6 && midi <= MAX_MIDI + 0.6;
         if (!this.pitchGood) {
           this.tracker.reset();
           this.clearReading();

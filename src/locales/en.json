@@ -46,7 +46,6 @@
     "locked": "Target locked",
     "calibration": "Reference pitch",
     "a4": "A4 / Hz",
-    "calibrationSlider": "A4 reference pitch slider",
     "presets": "Reference pitch presets",
     "setA4": "Set reference pitch to {{value}} Hz"
   },
