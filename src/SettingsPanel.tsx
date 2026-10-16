@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, NumberInput, SegmentedControl, Select, Slider } from '@mantine/core';
-import { IconLock, IconLockOpen, IconRestore, IconWaveSine } from '@tabler/icons-react';
+import { IconLock, IconLockOpen, IconRestore } from '@tabler/icons-react';
 import { clampMidi, MAX_MIDI, MIN_MIDI, NOTE_NAMES } from './audio/dsp';
 import type { TunerEngine, TunerSnapshot } from './audio/TunerEngine';
 import { clampA4, DEFAULT_SETTINGS, MAX_A4, MIN_A4, type Settings } from './settings';
@@ -44,10 +44,12 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
           size="sm"
           value={settings.mode}
           aria-labelledby="mode-label"
-          data={[{ value: 'auto', label: t('settings.auto') }, { value: 'manual', label: t('settings.manual') }]}
+          data={[
+            { value: 'auto', label: <span className="mode-option">{t('settings.auto')}<span className="mode-range">E2–E6</span></span> },
+            { value: 'manual', label: t('settings.manual') },
+          ]}
           onChange={(mode) => update({ mode: mode === 'manual' ? 'manual' : 'auto', midi: snapshot.midi })}
         />
-        <p className="field-help mode-help">{t(manual ? 'settings.manualHelp' : 'settings.autoHelp')}</p>
 
         <div className="note-selectors">
           <Select
@@ -111,14 +113,6 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
         <div className="calibration-presets" role="group" aria-label={t('settings.presets')}>
           {[432, 440, 442].map((a4) => <Button key={a4} variant={settings.a4 === a4 ? 'filled' : 'default'} size="sm" aria-label={t('settings.setA4', { value: a4 })} aria-pressed={settings.a4 === a4} onClick={() => update({ a4 })}>{a4} Hz</Button>)}
         </div>
-        <p className="field-help">{t('settings.calibrationHelp')}</p>
-      </div>
-
-      <div className="tuning-guide">
-        <h3><IconWaveSine size={17} />{t('settings.guideTitle')}</h3>
-        <p>{t('settings.guideFlat')}</p>
-        <p>{t('settings.guideSharp')}</p>
-        <p>{t('settings.guideStill')}</p>
       </div>
     </section>
   );

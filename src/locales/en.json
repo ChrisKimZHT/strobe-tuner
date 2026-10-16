@@ -11,7 +11,6 @@
     "dial": "True phase strobe ring: flat rotates counterclockwise, sharp rotates clockwise, matching pitch approaches a standstill",
     "flat": "Flat",
     "sharp": "Sharp",
-    "still": "Matching pitch slows the ring",
     "measured": "Measured / Hz",
     "cents": "Offset / cent",
     "target": "Target / Hz",
@@ -19,12 +18,7 @@
     "waiting": "Play a single note",
     "stabilizing": "Stabilizing signal",
     "tracking": "Tracking phase",
-    "outOfRange": "Move closer to the target",
-    "startHint": "Press Start and allow microphone access",
-    "startingHint": "Waiting for microphone access…",
-    "runningHint": "Sustain one note and slow the stripes",
-    "suspendedHint": "Audio is paused. Press Resume to continue",
-    "stoppedHint": "Microphone released. Ready when you are"
+    "outOfRange": "Move closer to the target"
   },
   "status": {
     "stopped": "Stopped",
@@ -45,8 +39,6 @@
     "mode": "Target mode",
     "auto": "Automatic",
     "manual": "Manual",
-    "autoHelp": "Detect single notes from E2 to E6. Lock a target to hold it.",
-    "manualHelp": "Choose a note and octave, then tune your string to the target.",
     "pitchClass": "Note",
     "octave": "Octave",
     "lock": "Lock current target",
@@ -54,16 +46,9 @@
     "locked": "Target locked",
     "calibration": "Reference pitch",
     "a4": "A4 / Hz",
-    "calibrationHelp": "Equal temperament · Default A4 = 440 Hz",
     "calibrationSlider": "A4 reference pitch slider",
     "presets": "Reference pitch presets",
-    "setA4": "Set reference pitch to {{value}} Hz",
-    "guideTitle": "Follow the stripes",
-    "guideFlat": "Counterclockwise: flat. Tighten the string.",
-    "guideSharp": "Clockwise: sharp. Loosen the string.",
-    "guideStill": "Slower stripes mean a closer match.",
-    "privacy": "Local audio processing · No recording or uploads",
-    "range": "E2–E6 · Single notes"
+    "setA4": "Set reference pitch to {{value}} Hz"
   },
   "errors": {
     "unsupported": "Use a browser with AudioWorklet support over HTTPS or localhost.",

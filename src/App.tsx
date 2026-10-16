@@ -4,7 +4,7 @@ import { ActionIcon, Button, Menu } from '@mantine/core';
 import {
   IconCheck, IconChevronDown, IconLanguage, IconLock,
   IconMicrophone, IconPlayerPlayFilled, IconPlayerStopFilled,
-  IconRotateClockwise, IconRotate, IconShieldCheck, IconX,
+  IconRotateClockwise, IconRotate, IconX,
 } from '@tabler/icons-react';
 import { LANGUAGES } from './i18n';
 import { NOTE_NAMES } from './audio/dsp';
@@ -107,7 +107,6 @@ export default function App() {
 
             <div className="direction" aria-hidden="true">
               <span><IconRotate size={14} />{t('tuner.flat')}</span>
-              <span>{t('tuner.still')}</span>
               <span>{t('tuner.sharp')}<IconRotateClockwise size={14} /></span>
             </div>
 
@@ -117,11 +116,6 @@ export default function App() {
               <div><span>{t('tuner.target')}</span><output>{snapshot.target.toFixed(2)}</output></div>
             </div>
 
-            <p className="listening-hint" role="status">
-              {snapshot.status === 'running' ? t('tuner.runningHint')
-                : snapshot.status === 'starting' ? t('tuner.startingHint')
-                  : snapshot.status === 'suspended' ? t('tuner.suspendedHint') : t('tuner.startHint')}
-            </p>
             <div className="transport">
               <Button
                 className="start-button"
@@ -141,7 +135,6 @@ export default function App() {
               </Button>
               {snapshot.status === 'suspended' && <Button variant="default" size="xl" onClick={() => void engine.stop()} aria-label={t('transport.stop')}><IconPlayerStopFilled size={20} /></Button>}
             </div>
-            <div className="range-caption">{t('settings.range')}</div>
           </section>
 
           <SettingsPanel settings={settings} snapshot={snapshot} update={update} engine={engine} />
@@ -156,7 +149,6 @@ export default function App() {
           </div>
         )}
         <PwaStatus active={active} />
-        <footer className="privacy-note"><IconShieldCheck size={14} />{t('settings.privacy')}</footer>
       </main>
     </div>
   );

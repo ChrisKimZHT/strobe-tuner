@@ -11,7 +11,6 @@
     "dial": "真实相位频闪环：偏低逆时针，偏高顺时针，同频趋于静止",
     "flat": "偏低",
     "sharp": "偏高",
-    "still": "同频趋于静止",
     "measured": "实测 / Hz",
     "cents": "偏差 / cent",
     "target": "目标 / Hz",
@@ -19,12 +18,7 @@
     "waiting": "请弹奏单根弦",
     "stabilizing": "正在稳定信号",
     "tracking": "相位追踪中",
-    "outOfRange": "请靠近目标音高",
-    "startHint": "点击开始，允许使用麦克风",
-    "startingHint": "正在等待麦克风授权…",
-    "runningHint": "保持单音，让条纹慢下来",
-    "suspendedHint": "音频已暂停，点击恢复继续调音",
-    "stoppedHint": "麦克风已释放，可随时重新开始"
+    "outOfRange": "请靠近目标音高"
   },
   "status": {
     "stopped": "已停止",
@@ -45,8 +39,6 @@
     "mode": "目标模式",
     "auto": "自动识别",
     "manual": "手动选择",
-    "autoHelp": "自动识别 E2–E6 范围内的单音，可锁定当前目标。",
-    "manualHelp": "选择目标音名与八度，再将琴弦调至目标音高。",
     "pitchClass": "音名",
     "octave": "八度",
     "lock": "锁定当前目标音",
@@ -54,16 +46,9 @@
     "locked": "目标已锁定",
     "calibration": "参考音高",
     "a4": "A4 / Hz",
-    "calibrationHelp": "十二平均律 · 默认 A4 = 440 Hz",
     "calibrationSlider": "A4 参考音高滑块",
     "presets": "常用参考音高",
-    "setA4": "参考音高设为 {{value}} Hz",
-    "guideTitle": "跟随条纹调音",
-    "guideFlat": "逆时针转动：音偏低，调紧琴弦。",
-    "guideSharp": "顺时针转动：音偏高，放松琴弦。",
-    "guideStill": "条纹越慢，越接近目标音高。",
-    "privacy": "本地音频处理 · 无录音、无上传",
-    "range": "E2–E6 · 单音调音"
+    "setA4": "参考音高设为 {{value}} Hz"
   },
   "errors": {
     "unsupported": "请使用支持 AudioWorklet 的浏览器，并通过 HTTPS 或 localhost 打开。",
