@@ -37,7 +37,7 @@ export function StrobeDial({ engine }: { engine: TunerEngine }) {
       context.translate(200, 200);
       context.strokeStyle = '#e9ecef';
       context.lineWidth = 1;
-      for (const radius of [140, 180]) {
+      for (const radius of [136, 182]) {
         context.beginPath();
         context.arc(0, 0, radius, 0, TAU);
         context.stroke();
@@ -51,19 +51,40 @@ export function StrobeDial({ engine }: { engine: TunerEngine }) {
         context.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
         context.stroke();
       }
+      const rotation = displayedPhase / 12;
       context.strokeStyle = '#f1f3f5';
-      context.lineWidth = 25;
+      context.lineWidth = 44;
       context.beginPath();
-      context.arc(0, 0, 160, 0, TAU);
+      context.arc(0, 0, 159, 0, TAU);
       context.stroke();
+
       context.globalAlpha = opacity;
-      context.strokeStyle = '#228be6';
-      for (let sector = 0; sector < 12; sector++) {
-        const angle = sector * TAU / 12 + displayedPhase / 12;
-        context.beginPath();
-        context.arc(0, 0, 160, angle, angle + 0.24);
-        context.stroke();
+      context.fillStyle = '#228be6';
+      context.beginPath();
+      // Trace connected inner/outer blocks as one silhouette, so there is no
+      // shared antialiased edge at radius 159. All blocks are filled together.
+      const quarter = TAU / 24;
+      for (let sector = 0; sector < 6; sector++) {
+        const start = sector * TAU / 6 + rotation;
+        const step = start + quarter;
+        const middle = start + 2 * quarter;
+        const end = start + 3 * quarter;
+
+        context.moveTo(Math.cos(start) * 181, Math.sin(start) * 181);
+        context.arc(0, 0, 181, start, step);
+        context.lineTo(Math.cos(step) * 159, Math.sin(step) * 159);
+        context.arc(0, 0, 159, step, middle);
+        context.lineTo(Math.cos(middle) * 137, Math.sin(middle) * 137);
+        context.arc(0, 0, 137, middle, start, true);
+        context.closePath();
+
+        context.moveTo(Math.cos(middle) * 181, Math.sin(middle) * 181);
+        context.arc(0, 0, 181, middle, end);
+        context.lineTo(Math.cos(end) * 159, Math.sin(end) * 159);
+        context.arc(0, 0, 159, end, middle, true);
+        context.closePath();
       }
+      context.fill();
       context.globalAlpha = 1;
       frameId = requestAnimationFrame(draw);
     };

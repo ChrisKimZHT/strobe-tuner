@@ -8,7 +8,7 @@
   "tuner": {
     "title": "Tuner",
     "targetNote": "Target note",
-    "dial": "True phase strobe ring: flat rotates counterclockwise, sharp rotates clockwise, matching pitch approaches a standstill",
+    "dial": "Two strobe rings rotating together, with twice as many blocks on the outer ring: flat rotates counterclockwise, sharp rotates clockwise, matching pitch approaches a standstill",
     "flat": "Flat",
     "sharp": "Sharp",
     "measured": "Measured / Hz",
@@ -27,11 +27,7 @@
     "suspended": "Paused"
   },
   "transport": {
-    "start": "Start tuning",
-    "stop": "Stop tuning",
-    "cancel": "Cancel start",
-    "resume": "Resume audio",
-    "shortcut": "SPACE"
+    "resume": "Resume audio"
   },
   "settings": {
     "title": "Tuning settings",
@@ -39,15 +35,24 @@
     "mode": "Target mode",
     "auto": "Automatic",
     "manual": "Manual",
+    "autoShort": "Auto",
+    "manualShort": "Manual",
+    "lockShort": "Lock",
+    "unlockShort": "Unlock",
     "pitchClass": "Note",
     "octave": "Octave",
     "lock": "Lock current target",
     "unlock": "Unlock target",
     "locked": "Target locked",
     "calibration": "Reference pitch",
+    "pitchSelection": "Pitch selection",
+    "channel": "Input channel",
+    "channel_left": "Left",
+    "channel_mix": "Mix",
+    "channel_right": "Right",
     "a4": "A4 / Hz",
-    "presets": "Reference pitch presets",
-    "setA4": "Set reference pitch to {{value}} Hz"
+    "decreaseA4": "Decrease reference pitch",
+    "increaseA4": "Increase reference pitch"
   },
   "errors": {
     "unsupported": "Use a browser with AudioWorklet support over HTTPS or localhost.",
@@ -56,15 +61,14 @@
     "deviceEnded": "The microphone was disconnected. Check your device and start again.",
     "processingFailed": "Audio processing failed. Please start again.",
     "startFailed": "Unable to start tuning. Check your microphone and browser audio permissions.",
-    "resumeFailed": "Unable to resume audio. Stop and start again."
+    "resumeFailed": "Unable to resume audio. Reload the page to try again."
   },
-  "common": { "dismiss": "Dismiss notification" },
+  "common": { "dismiss": "Dismiss notification", "retry": "Retry" },
   "pwa": {
     "label": "App update",
     "registrationError": "Offline cache registration failed:",
     "offlineReady": "Ready for offline use. You can also install the tuner on your home screen.",
     "updateReady": "An update is ready. Updating will reload the page.",
-    "stopToUpdate": "An update is ready. Stop tuning to update.",
     "updateError": "Update failed. Please try again later.",
     "update": "Update now",
     "later": "Later",

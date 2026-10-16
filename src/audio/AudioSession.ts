@@ -23,7 +23,7 @@ export class AudioSession {
     try {
       if (toneHz === undefined) {
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false },
+          audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false, channelCount: { ideal: 2 } },
         });
         if (generation !== this.generation) {
           stream.getTracks().forEach((track) => track.stop());
@@ -41,7 +41,9 @@ export class AudioSession {
 
       await context.audioWorklet.addModule(moduleUrl);
       if (generation !== this.generation) return;
-      this.node = new AudioWorkletNode(context, 'strobe-tuner', { outputChannelCount: [1] });
+      this.node = new AudioWorkletNode(context, 'strobe-tuner', {
+        outputChannelCount: [1], channelCount: 2, channelCountMode: 'clamped-max', channelInterpretation: 'discrete',
+      });
       onNode(this.node);
       this.node.connect(context.destination);
       if (this.stream) {

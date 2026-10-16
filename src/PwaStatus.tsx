@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@mantine/core';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-export function PwaStatus({ active }: { active: boolean }) {
+export function PwaStatus() {
   const { t } = useTranslation();
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(false);
@@ -39,10 +39,10 @@ export function PwaStatus({ active }: { active: boolean }) {
   return (
     <aside className="pwa-status" aria-label={t('pwa.label')}>
       <p role="status">{updateError ? t('pwa.updateError')
-        : needRefresh ? active ? t('pwa.stopToUpdate') : t('pwa.updateReady')
+        : needRefresh ? t('pwa.updateReady')
           : t('pwa.offlineReady')}</p>
       <div className="pwa-actions">
-        {needRefresh && <Button size="xs" disabled={active} loading={updating} onClick={() => void refresh()}>{t('pwa.update')}</Button>}
+        {needRefresh && <Button size="xs" loading={updating} onClick={() => void refresh()}>{t('pwa.update')}</Button>}
         <Button size="xs" variant="subtle" onClick={dismiss}>{needRefresh ? t('pwa.later') : t('pwa.acknowledge')}</Button>
       </div>
     </aside>

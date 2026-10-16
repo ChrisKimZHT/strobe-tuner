@@ -17,14 +17,17 @@ export function useTuner(settings: Settings) {
     }, 100);
     const onVisibility = () => engine.handleVisibility();
     const onPageHide = () => { void engine.stop(); };
+    const onPageShow = (event: PageTransitionEvent) => { if (event.persisted) void engine.start(); };
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('pageshow', onPageShow);
     return () => {
       if (window.debugTone === debugTone) delete window.debugTone;
       engine.onChange = undefined;
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('pageshow', onPageShow);
       void engine.stop();
     };
   }, [engine]);
