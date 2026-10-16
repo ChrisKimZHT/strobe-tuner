@@ -24,9 +24,12 @@ class TunerProcessor extends AudioWorkletProcessor {
   }
   process(inputs: Float32Array[][], outputs: Float32Array[][]) {
     const output = outputs[0][0];
-    const input = inputs[0]?.[0];
+    const channels = inputs[0] ?? [];
     for (let n = 0; n < output.length; n++) {
-      let x = input?.[n] ?? 0;
+      // Average every input channel, including interfaces with signal only on channel 2.
+      let x = 0;
+      for (const channel of channels) x += channel[n] ?? 0;
+      if (channels.length) x /= channels.length;
       if (this.test) {
         x = .2 * Math.cos(this.testPhase);
         this.testPhase = (this.testPhase + TAU * this.testFrequency / sampleRate) % TAU;

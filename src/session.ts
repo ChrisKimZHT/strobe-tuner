@@ -18,7 +18,7 @@ export class AudioSession {
       if (generation !== this.generation) return;
       if (!test) {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: {
-          echoCancellation: false, autoGainControl: false, noiseSuppression: false, channelCount: 1
+          echoCancellation: false, autoGainControl: false, noiseSuppression: false
         } });
         if (generation !== this.generation) { stream.getTracks().forEach(t => t.stop()); return; }
         this.stream = stream;
