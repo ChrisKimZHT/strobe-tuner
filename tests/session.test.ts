@@ -97,3 +97,96 @@ test('autoplay restrictions do not block microphone access or suspended state', 
     }
   }
 });
+
+test('debug tones feed the worklet without a microphone and release the oscillator on input changes', async () => {
+  class Node {
+    connections: unknown[] = [];
+    disconnected = false;
+    connect(node: unknown) { this.connections.push(node); }
+    disconnect() { this.disconnected = true; }
+  }
+  class Oscillator extends Node {
+    type = 'sine';
+    frequency = { value: 0 };
+    started = false;
+    stopped = false;
+    start() { this.started = true; }
+    stop() { this.stopped = true; }
+  }
+  class Gain extends Node { gain = { value: 1 }; }
+  class Context {
+    sampleRate = 48000;
+    state = 'suspended';
+    onstatechange: unknown;
+    destination = {};
+    audioWorklet = { addModule: async () => {} };
+    async resume() { this.state = 'running'; }
+    async close() { this.state = 'closed'; }
+    createOscillator() {
+      const oscillator = new Oscillator();
+      oscillators.push(oscillator);
+      return oscillator;
+    }
+    createGain() {
+      const gain = new Gain();
+      gains.push(gain);
+      return gain;
+    }
+    createMediaStreamSource() { return new Node(); }
+  }
+  class Worklet extends Node { port = { onmessage: null, close() {} }; }
+  const oscillators: Oscillator[] = [];
+  const gains: Gain[] = [];
+  let mediaRequests = 0;
+  let trackStopped = false;
+  const originals = ['AudioContext', 'AudioWorkletNode', 'navigator'].map((key) => [
+    key, Object.getOwnPropertyDescriptor(globalThis, key),
+  ] as const);
+  Object.defineProperty(globalThis, 'AudioContext', { value: Context, configurable: true });
+  Object.defineProperty(globalThis, 'AudioWorkletNode', { value: Worklet, configurable: true });
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: { mediaDevices: { getUserMedia: async () => {
+      mediaRequests++;
+      return { getTracks: () => [{ onended: null, stop() { trackStopped = true; } }] };
+    } } },
+  });
+  const session = new AudioSession();
+  try {
+    await session.start('worklet', () => {}, () => {}, 440);
+    const firstContext = session.context;
+    assert.equal(mediaRequests, 0);
+    assert.equal(oscillators[0].frequency.value, 440);
+    assert.equal(oscillators[0].started, true);
+    assert.equal(gains[0].gain.value, 0.3);
+    assert.deepEqual(oscillators[0].connections, [gains[0]]);
+    assert.deepEqual(gains[0].connections, [session.node]);
+
+    await session.start('worklet', () => {}, () => {}, 441);
+    assert.equal(firstContext?.state, 'closed');
+    assert.equal(oscillators[0].stopped, true);
+    assert.equal(oscillators[0].disconnected, true);
+    assert.equal(gains[0].disconnected, true);
+    assert.equal(oscillators[1].frequency.value, 441);
+    assert.equal(mediaRequests, 0);
+
+    await session.start('worklet', () => {}, () => {});
+    assert.equal(oscillators[1].stopped, true);
+    assert.equal(mediaRequests, 1);
+    await session.stop();
+    assert.equal(trackStopped, true);
+
+    for (const hz of [0, -1, NaN, Infinity, 24000]) {
+      await assert.rejects(session.start('worklet', () => assert.fail('invalid tone created a node'), () => {}, hz), RangeError);
+      assert.equal(session.context, undefined);
+    }
+    assert.equal(mediaRequests, 1);
+    assert.equal(oscillators.length, 2);
+  } finally {
+    await session.stop();
+    for (const [key, descriptor] of originals) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else Reflect.deleteProperty(globalThis, key);
+    }
+  }
+});

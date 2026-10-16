@@ -1,15 +1,17 @@
-/** Owns microphone resources and cancels starts that finish after a stop. */
+/** Owns audio input resources and cancels starts that finish after a stop. */
 export class AudioSession {
   context?: AudioContext;
   node?: AudioWorkletNode;
   private stream?: MediaStream;
-  private source?: MediaStreamAudioSourceNode;
+  private source?: AudioNode;
+  private oscillator?: OscillatorNode;
   private generation = 0;
 
   async start(
     moduleUrl: string,
     onNode: (node: AudioWorkletNode) => void,
     onState: (state: string) => void,
+    toneHz?: number,
   ) {
     const closing = this.stop();
     const generation = this.generation;
@@ -19,32 +21,49 @@ export class AudioSession {
     const context = new AudioContext({ latencyHint: 'interactive' });
     this.context = context;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false },
-      });
-      if (generation !== this.generation) {
-        stream.getTracks().forEach((track) => track.stop());
-        return;
+      if (toneHz === undefined) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false },
+        });
+        if (generation !== this.generation) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        this.stream = stream;
+        stream.getTracks().forEach((track) => {
+          track.onended = () => {
+            if (generation === this.generation) onState('ended');
+          };
+        });
+      } else if (!Number.isFinite(toneHz) || toneHz <= 0 || toneHz >= context.sampleRate / 2) {
+        throw new RangeError(`Hz must be greater than 0 and below ${context.sampleRate / 2}.`);
       }
-      this.stream = stream;
-      stream.getTracks().forEach((track) => {
-        track.onended = () => {
-          if (generation === this.generation) onState('ended');
-        };
-      });
 
       await context.audioWorklet.addModule(moduleUrl);
       if (generation !== this.generation) return;
       this.node = new AudioWorkletNode(context, 'strobe-tuner', { outputChannelCount: [1] });
       onNode(this.node);
       this.node.connect(context.destination);
-      this.source = context.createMediaStreamSource(stream);
-      this.source.connect(this.node);
+      if (this.stream) {
+        this.source = context.createMediaStreamSource(this.stream);
+        this.source.connect(this.node);
+      } else if (toneHz !== undefined) {
+        const gain = context.createGain();
+        gain.gain.value = 0.3;
+        this.source = gain;
+        gain.connect(this.node);
+        const oscillator = context.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = toneHz;
+        oscillator.connect(gain);
+        oscillator.start();
+        this.oscillator = oscillator;
+      }
       context.onstatechange = () => {
         if (generation === this.generation) onState(context.state);
       };
       // Autoplay restrictions can leave resume pending until a user gesture.
-      // Request the microphone first and keep the suspended UI usable.
+      // Set up the input first and keep the suspended UI usable.
       void context.resume().catch(() => {});
       onState(context.state);
     } catch (error) {
@@ -56,6 +75,9 @@ export class AudioSession {
 
   async stop() {
     ++this.generation;
+    this.oscillator?.stop();
+    this.oscillator?.disconnect();
+    this.oscillator = undefined;
     this.stream?.getTracks().forEach((track) => {
       track.onended = null;
       track.stop();

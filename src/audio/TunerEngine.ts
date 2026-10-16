@@ -84,7 +84,19 @@ export class TunerEngine {
     this.onChange?.();
   }
 
-  async start() {
+  /** Switch to a synthesized input, or back to the microphone when omitted. */
+  async setDebugTone(hz?: number) {
+    if (hz !== undefined && (!Number.isFinite(hz) || hz <= 0 ||
+      (this.session.context && hz >= this.session.context.sampleRate / 2))) {
+      throw new RangeError('Hz must be finite, greater than 0, and below half the audio sample rate.');
+    }
+    const closing = this.stop();
+    const request = this.request;
+    await closing;
+    if (request === this.request) await this.start(hz);
+  }
+
+  async start(toneHz?: number) {
     if (this.status !== 'stopped') return;
     const request = ++this.request;
     this.status = 'starting';
@@ -95,7 +107,8 @@ export class TunerEngine {
     this.onChange?.();
 
     try {
-      if (!window.isSecureContext || !window.AudioContext || !window.AudioWorkletNode || !navigator.mediaDevices?.getUserMedia) {
+      if (!window.isSecureContext || !window.AudioContext || !window.AudioWorkletNode ||
+        (toneHz === undefined && !navigator.mediaDevices?.getUserMedia)) {
         this.fail('unsupported');
         return;
       }
@@ -147,12 +160,13 @@ export class TunerEngine {
         }
         this.status = state === 'running' ? 'running' : 'suspended';
         this.configureTarget();
-      });
+      }, toneHz);
     } catch (error) {
       if (request !== this.request) return;
       const name = error instanceof Error ? error.name : '';
       this.fail(name === 'NotAllowedError' ? 'permissionDenied'
         : ['NotFoundError', 'NotReadableError', 'OverconstrainedError'].includes(name) ? 'deviceUnavailable' : 'startFailed');
+      if (toneHz !== undefined) throw error;
     }
   }
 

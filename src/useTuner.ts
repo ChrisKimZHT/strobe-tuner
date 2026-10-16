@@ -8,6 +8,8 @@ export function useTuner(settings: Settings) {
 
   useEffect(() => {
     engine.onChange = () => setSnapshot(engine.snapshot());
+    const debugTone = (hz?: number) => engine.setDebugTone(hz);
+    window.debugTone = debugTone;
     // Numeric readings need much less frequent updates than the phase animation.
     const timer = window.setInterval(() => {
       const frame = engine.snapshot();
@@ -18,6 +20,7 @@ export function useTuner(settings: Settings) {
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pagehide', onPageHide);
     return () => {
+      if (window.debugTone === debugTone) delete window.debugTone;
       engine.onChange = undefined;
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibility);
