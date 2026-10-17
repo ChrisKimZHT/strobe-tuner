@@ -1,7 +1,5 @@
-import type { InputChannel } from '../settings';
-
 export type ProcessorMessage =
-  | { type: 'config'; revision: number; target: number; channel: InputChannel }
+  | { type: 'config'; revision: number; target: number }
   | { type: 'buffer'; buffer: ArrayBuffer };
 
 export type PitchRequest = {

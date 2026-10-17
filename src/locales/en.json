@@ -52,10 +52,6 @@
     "locked": "Target locked",
     "calibration": "Reference pitch",
     "pitchSelection": "Pitch selection",
-    "channel": "Input channel",
-    "channel_left": "Left",
-    "channel_mix": "Mix",
-    "channel_right": "Right",
     "a4": "A4 / Hz",
     "decreaseA4": "Decrease reference pitch",
     "increaseA4": "Increase reference pitch"

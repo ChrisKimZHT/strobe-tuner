@@ -52,8 +52,7 @@ export class TunerEngine {
       this.tracker.acquired = false;
     }
     if (settings.mode === 'manual') this.midi = settings.midi;
-    if (previous.channel !== settings.channel) this.tracker.acquired = false;
-    if (previous.mode !== settings.mode || previous.a4 !== settings.a4 || previous.midi !== settings.midi || previous.channel !== settings.channel) {
+    if (previous.mode !== settings.mode || previous.a4 !== settings.a4 || previous.midi !== settings.midi) {
       this.configureTarget();
     }
   }
@@ -80,7 +79,6 @@ export class TunerEngine {
     this.tracker.reset();
     const config: ProcessorMessage = {
       type: 'config', revision: this.revision, target: frequency(this.midi, this.settings.a4),
-      channel: this.settings.channel,
     };
     this.session.node?.port.postMessage(config);
     this.onChange?.();

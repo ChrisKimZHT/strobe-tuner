@@ -22,8 +22,8 @@ function createProcessor() {
     registerProcessor: (_name: string, constructor: any) => { Processor = constructor; },
   });
   const processor = new Processor();
-  const configure = (channel: string, revision = 1) => processor.port.onmessage({
-    data: { type: 'config', target: 440, revision, channel },
+  const configure = (target = 440, revision = 1) => processor.port.onmessage({
+    data: { type: 'config', target, revision },
   });
   const process = (channels: number[], blocks = 32) => {
     const input = channels.map((value) => new Float32Array(128).fill(value));
@@ -37,33 +37,28 @@ function createProcessor() {
   return { configure, process };
 }
 
-test('processor selects left/right input and averages stereo in mix mode', () => {
-  for (const [channel, expected] of [['left', 0.25], ['mix', 0.5], ['right', 0.75]] as const) {
-    const processor = createProcessor();
-    processor.configure(channel);
-    const frames = processor.process([0.25, 0.75]);
-    assert.equal(frames.length, 1);
-    assert.ok(new Float32Array(frames[0].buffer).every((value) => value === expected));
-  }
-});
-
-test('mono devices work in all modes and disconnected input stays silent', () => {
-  for (const channel of ['left', 'mix', 'right']) {
-    for (const input of [[0.25], []]) {
-      const processor = createProcessor();
-      processor.configure(channel);
-      const [frame] = processor.process(input);
-      assert.ok(new Float32Array(frame.buffer).every((value) => value === (input[0] ?? 0)));
-    }
-  }
-});
-
-test('changing channel discards the partial frame from the previous input', () => {
+test('processor averages stereo input by default', () => {
   const processor = createProcessor();
-  processor.configure('left');
+  const frames = processor.process([0.25, 0.75]);
+  assert.equal(frames.length, 1);
+  assert.ok(new Float32Array(frames[0].buffer).every((value) => value === 0.5));
+});
+
+test('mono input keeps its amplitude and disconnected input stays silent', () => {
+  for (const input of [[0.25], []]) {
+    const processor = createProcessor();
+    processor.configure();
+    const [frame] = processor.process(input);
+    assert.ok(new Float32Array(frame.buffer).every((value) => value === (input[0] ?? 0)));
+  }
+});
+
+test('changing target discards the partial frame from the previous configuration', () => {
+  const processor = createProcessor();
+  processor.configure();
   assert.equal(processor.process([0.25, 0.75], 16).length, 0);
-  processor.configure('right', 2);
-  const [frame] = processor.process([0.25, 0.75]);
+  processor.configure(442, 2);
+  const [frame] = processor.process([0.5, 1]);
   assert.equal(frame.revision, 2);
   assert.ok(new Float32Array(frame.buffer).every((value) => value === 0.75));
 });

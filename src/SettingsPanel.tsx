@@ -6,7 +6,6 @@ import type { TunerEngine, TunerSnapshot } from './audio/TunerEngine';
 import { clampA4, DEFAULT_SETTINGS, MAX_A4, MIN_A4, type Settings } from './settings';
 
 const WHITE_KEYS = [0, 2, 4, 5, 7, 9, 11];
-const INPUT_CHANNELS = ['left', 'mix', 'right'] as const;
 const MIN_OCTAVE = Math.floor(MIN_MIDI / 12) - 1;
 const MAX_OCTAVE = Math.floor(MAX_MIDI / 12) - 1;
 const NOTE_RANGE = `${NOTE_NAMES[MIN_MIDI % 12]}${MIN_OCTAVE}–${NOTE_NAMES[MAX_MIDI % 12]}${MAX_OCTAVE}`;
@@ -155,30 +154,6 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
         </div>
       </div>
 
-      <div className="settings-section channel-settings">
-        <h3 className="pitch-selection-title">{t('settings.channel')}</h3>
-        <div className="channel-slider">
-          <Slider
-            thumbLabel={t('settings.channel')}
-            value={INPUT_CHANNELS.indexOf(settings.channel)}
-            min={0}
-            max={2}
-            step={1}
-            marks={INPUT_CHANNELS.map((channel, value) => ({ value, label: t(`settings.channel_${channel}`) }))}
-            restrictToMarks
-            label={null}
-            size={28}
-            radius="xl"
-            thumbSize={24}
-            classNames={{
-              root: 'pill-slider-root', track: 'pill-slider-track', bar: 'pill-slider-bar', thumb: 'pill-slider-thumb',
-              markWrapper: 'octave-slider-mark-wrapper', mark: 'octave-slider-mark', markLabel: 'octave-slider-mark-label',
-            }}
-            attributes={{ thumb: { 'aria-valuetext': t(`settings.channel_${settings.channel}`) } }}
-            onChange={(value) => update({ channel: INPUT_CHANNELS[value] })}
-          />
-        </div>
-      </div>
     </section>
   );
 }

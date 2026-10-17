@@ -1,6 +1,5 @@
 import { PhaseDemodulator } from './dsp';
 import type { ProcessorMessage } from './messages';
-import type { InputChannel } from '../settings';
 
 declare const sampleRate: number;
 declare class AudioWorkletProcessor {
@@ -16,7 +15,6 @@ class TunerProcessor extends AudioWorkletProcessor {
   private index = 0;
   private tick = 0;
   private revision = 0;
-  private channel: InputChannel = 'mix';
 
   constructor() {
     super();
@@ -24,7 +22,6 @@ class TunerProcessor extends AudioWorkletProcessor {
       if (data.type === 'buffer') this.pool.push(new Float32Array(data.buffer));
       if (data.type === 'config') {
         this.revision = data.revision;
-        this.channel = data.channel;
         this.dsp.setTarget(data.target);
         // Discard the partial identification window after a target change.
         this.index = 0;
@@ -35,16 +32,10 @@ class TunerProcessor extends AudioWorkletProcessor {
   process(inputs: Float32Array[][], outputs: Float32Array[][]) {
     const output = outputs[0][0];
     const channels = inputs[0] ?? [];
-    // A mono input is usable in either left or right mode.
-    const selected = channels[this.channel === 'right' ? 1 : 0] ?? channels[0];
     for (let index = 0; index < output.length; index++) {
       let sample = 0;
-      if (this.channel === 'mix') {
-        for (const channel of channels) sample += channel[index] ?? 0;
-        if (channels.length) sample /= channels.length;
-      } else {
-        sample = selected?.[index] ?? 0;
-      }
+      for (const channel of channels) sample += channel[index] ?? 0;
+      if (channels.length) sample /= channels.length;
       output[index] = 0;
       this.dsp.push(sample);
 
