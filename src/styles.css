@@ -424,6 +424,79 @@ a:focus-visible {
 
 .note-controls {
   margin-top: 16px;
+  height: 216px;
+}
+
+.instrument-settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.instrument-settings label {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.instrument-settings select {
+  font-size: 12px;
+}
+
+.string-controls {
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 6px;
+  height: 100%;
+}
+
+.string-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  padding: 0 12px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: 6px;
+  background: var(--mantine-color-white);
+  color: var(--mantine-color-text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.string-choice:disabled {
+  background: var(--mantine-color-gray-1);
+  color: var(--mantine-color-gray-6);
+  cursor: default;
+}
+
+.string-choice:not(:disabled):hover {
+  border-color: var(--mantine-primary-color-filled);
+}
+
+.string-choice[data-active] {
+  background: var(--mantine-primary-color-filled);
+  border-color: var(--mantine-primary-color-filled);
+  color: var(--mantine-color-white);
+}
+
+.string-number {
+  min-width: 36px;
+}
+
+.string-line {
+  flex: 1;
+  border-radius: 4px;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.string-note {
+  min-width: 34px;
+  text-align: right;
+  font-weight: 600;
 }
 
 .piano-keyboard {
@@ -552,6 +625,11 @@ a:focus-visible {
   transform: translateX(-50%);
   font-size: 12px;
   line-height: 1;
+}
+
+.octave-slider-mark-label sub {
+  font-size: 0.75em;
+  line-height: 0;
 }
 
 .calibration-settings {

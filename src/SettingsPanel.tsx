@@ -1,14 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { ActionIcon, Button, SegmentedControl, Slider } from '@mantine/core';
+import { ActionIcon, Button, NativeSelect, SegmentedControl, Slider } from '@mantine/core';
 import { IconLock, IconLockOpen, IconMinus, IconPlus } from '@tabler/icons-react';
-import { clampMidi, MAX_MIDI, MIN_MIDI, NOTE_NAMES } from './audio/dsp';
+import { normalizeMidi, pitchClass, NOTE_NAMES } from './audio/dsp';
 import type { TunerEngine, TunerSnapshot } from './audio/TunerEngine';
 import { clampA4, DEFAULT_SETTINGS, MAX_A4, MIN_A4, type Settings } from './settings';
+import { getInstrument, getTuning, INSTRUMENTS, noteLabel } from './tunings';
 
 const WHITE_KEYS = [0, 2, 4, 5, 7, 9, 11];
-const MIN_OCTAVE = Math.floor(MIN_MIDI / 12) - 1;
-const MAX_OCTAVE = Math.floor(MAX_MIDI / 12) - 1;
-const NOTE_RANGE = `${NOTE_NAMES[MIN_MIDI % 12]}${MIN_OCTAVE}–${NOTE_NAMES[MAX_MIDI % 12]}${MAX_OCTAVE}`;
 
 type Props = {
   settings: Settings;
@@ -20,11 +18,19 @@ type Props = {
 export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
   const { t } = useTranslation();
   const octave = Math.floor(snapshot.midi / 12) - 1;
-  const noteName = NOTE_NAMES[snapshot.midi % 12];
-  const octaveMarks = Array.from({ length: MAX_OCTAVE - MIN_OCTAVE + 1 }, (_, index) => ({
-    value: MIN_OCTAVE + index, label: `${noteName}${MIN_OCTAVE + index}`,
-  }));
+  const noteName = NOTE_NAMES[pitchClass(snapshot.midi)];
+  // A practical manual viewport, expanded to include any automatically acquired note.
+  const minOctave = Math.min(0, octave);
+  const maxOctave = Math.max(8, octave);
+  const octaveMarks = Array.from({ length: maxOctave - minOctave + 1 }, (_, index) => {
+    const value = minOctave + index;
+    return { value, label: <>{noteName}<sub>{value}</sub></> };
+  });
   const manual = settings.mode === 'manual';
+  const instrument = getInstrument(settings.instrument);
+  const tuning = getTuning(settings.instrument, settings.tuning);
+  const strings = tuning?.notes.map((midi, index) => ({ midi, number: tuning.notes.length - index }))
+    .sort((a, b) => a.midi - b.midi);
 
   return (
     <section className="settings-panel" aria-labelledby="settings-title">
@@ -36,8 +42,34 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
         }}>{t('settings.reset')}</Button>
       </div>
 
+      <div className="instrument-settings">
+        <NativeSelect
+          label={t('settings.instrument')}
+          value={settings.instrument}
+          data={['chromatic', ...INSTRUMENTS.map(({ id }) => id)].map((id) => ({ value: id, label: t(`instruments.${id}`, { defaultValue: id }) }))}
+          onChange={(event) => {
+            const id = event.currentTarget.value;
+            const preset = getInstrument(id)?.tunings[0];
+            update({ instrument: id, tuning: preset?.id ?? '', midi: preset?.notes[0] ?? normalizeMidi(snapshot.midi) });
+          }}
+        />
+        <NativeSelect
+          label={t('settings.tuning')}
+          value={tuning?.id ?? ''}
+          disabled={!instrument}
+          data={instrument ? instrument.tunings.map((preset, index) => ({
+            value: preset.id,
+            label: `${t(`tunings.${preset.id}`, { defaultValue: preset.id })}${index === 0 ? ` · ${t('settings.default')}` : ''}`,
+          })) : [{ value: '', label: t('settings.notApplicable') }]}
+          onChange={(event) => {
+            const preset = getTuning(settings.instrument, event.currentTarget.value)!;
+            update({ tuning: preset.id, midi: preset.notes[0] });
+          }}
+        />
+      </div>
+
       <div className="settings-section target-settings">
-        <h3 className="pitch-selection-title">{t('settings.pitchSelection')}</h3>
+        <h3 className="pitch-selection-title">{t(tuning ? 'settings.stringSelection' : 'settings.pitchSelection')}</h3>
         <div className="target-actions">
           <SegmentedControl
             className="mode-switch"
@@ -47,10 +79,10 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
             value={settings.mode}
             aria-label={t('settings.mode')}
             data={[
-              { value: 'auto', label: <span className="mode-option">{t('settings.autoShort')}<span className="mode-range">{NOTE_RANGE}</span></span> },
+              { value: 'auto', label: <span className="mode-option">{t('settings.autoShort')}{tuning && <span className="mode-range">{t('settings.stringCount', { count: tuning.notes.length })}</span>}</span> },
               { value: 'manual', label: t('settings.manualShort') },
             ]}
-            onChange={(mode) => update({ mode: mode === 'manual' ? 'manual' : 'auto', midi: snapshot.midi })}
+            onChange={(mode) => update({ mode: mode === 'manual' ? 'manual' : 'auto', midi: tuning && !tuning.notes.includes(snapshot.midi) ? tuning.notes[0] : snapshot.midi })}
           />
           <ActionIcon
             size={38}
@@ -65,6 +97,26 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
         </div>
 
         <div className="note-controls">
+          {strings ? (
+            <div className="string-controls" role="group" aria-label={t('settings.stringSelection')}>
+              {strings.map(({ midi, number }, index) => (
+                <button
+                  type="button"
+                  className="string-choice"
+                  key={number}
+                  disabled={!manual}
+                  aria-label={t('settings.stringNote', { number, note: noteLabel(midi) })}
+                  aria-pressed={snapshot.midi === midi}
+                  data-active={snapshot.midi === midi || undefined}
+                  onClick={() => update({ midi })}
+                >
+                  <span className="string-number">{t('settings.stringNumber', { number })}</span>
+                  <span className="string-line" aria-hidden="true" style={{ height: `${1 + (strings.length - index - 1) * 0.6}px` }} />
+                  <span className="string-note">{noteLabel(midi)}</span>
+                </button>
+              ))}
+            </div>
+          ) : <>
           <div className="piano-keyboard" role="group" aria-label={t('settings.pitchClass')} aria-disabled={!manual}>
             {NOTE_NAMES.map((name, pitchClass) => {
               const midi = (octave + 1) * 12 + pitchClass;
@@ -79,7 +131,7 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
                   aria-label={`${name}${octave}`}
                   aria-pressed={snapshot.midi === midi}
                   data-active={snapshot.midi === midi || undefined}
-                  disabled={!manual || midi < MIN_MIDI || midi > MAX_MIDI}
+                  disabled={!manual}
                   onClick={() => update({ midi })}
                 >{name}</button>
               );
@@ -102,8 +154,8 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
                 }}
                 styles={{ thumb: { display: 'flex', cursor: manual ? 'pointer' : 'default' } }}
                 value={octave}
-                min={MIN_OCTAVE}
-                max={MAX_OCTAVE}
+                min={minOctave}
+                max={maxOctave}
                 step={1}
                 marks={octaveMarks}
                 restrictToMarks
@@ -111,10 +163,11 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
                 size={28}
                 radius="xl"
                 thumbSize={24}
-                onChange={(value) => update({ midi: clampMidi((value + 1) * 12 + snapshot.midi % 12) })}
+                onChange={(value) => update({ midi: (value + 1) * 12 + pitchClass(snapshot.midi) })}
               />
             </div>
           </div>
+          </>}
         </div>
       </div>
 

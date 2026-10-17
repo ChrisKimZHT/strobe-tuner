@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PitchDetector } from 'pitchy';
-import { PhaseDemodulator, frequency, MAX_MIDI, MIN_MIDI, TargetTracker, TAU } from '../src/audio/dsp.ts';
+import { PhaseDemodulator, frequency, normalizeMidi, pitchClass, TargetTracker, TAU } from '../src/audio/dsp.ts';
 
 function measure(target: number, delta: number, sr = 48000, harmonics = false) {
   const dsp = new PhaseDemodulator(sr, target);
@@ -15,7 +15,7 @@ function measure(target: number, delta: number, sr = 48000, harmonics = false) {
   return { drift: (end - start) / TAU / 3, dsp };
 }
 for (const sr of [44100, 48000]) {
-  for (const midi of [MIN_MIDI, 40, 45, 69, 88, MAX_MIDI]) {
+  for (const midi of [36, 40, 45, 69, 88, 95]) {
     const target = frequency(midi);
     for (const delta of [0, -1, 1, target * (2 ** (-1/1200) - 1), target * (2 ** (1/1200) - 1)]) {
       test(`phase ${sr}Hz MIDI ${midi}, delta ${delta.toFixed(6)}Hz`, () => {
@@ -30,7 +30,7 @@ for (const sr of [44100, 48000]) {
 }
 test('strong harmonics: same DSP phase and actual Pitchy fundamental', () => {
   const detector = PitchDetector.forFloat32Array(4096);
-  for (const midi of [MIN_MIDI,40,45,69,MAX_MIDI]) {
+  for (const midi of [36,40,45,69,95]) {
     const f = frequency(midi), samples = new Float32Array(4096);
     for (let n=0;n<samples.length;n++) {
       const p=TAU*(f+1)*n/48000;
@@ -91,7 +91,7 @@ test('phase wraps; arbitrary block partition does not change state', () => {
   assert.deepEqual(run([128]),run([1,17,256,63,1024]));
   assert.ok(run([128]).wraps>=1);
 });
-test('target stability, hysteresis, octave persistence, A4 and boundary margin', () => {
+test('target stability, hysteresis, octave persistence and A4', () => {
   const t=new TargetTracker();
   assert.equal(t.update(110,1,.1,440),false); assert.equal(t.update(110,1,.1,440),false);
   assert.equal(t.update(110,1,.1,440),true); assert.equal(t.midi,45);
@@ -99,7 +99,7 @@ test('target stability, hysteresis, octave persistence, A4 and boundary margin',
   for(let n=0;n<5;n++) assert.equal(t.update(220,1,.1,440),false);
   assert.equal(t.update(220,1,.1,440),true); assert.equal(t.midi,57);
   assert.equal(t.update(220,.1,.1,440),false);
-  for(const [m,a,expected] of [[MIN_MIDI-.5,430,MIN_MIDI],[MAX_MIDI+.5,450,MAX_MIDI]]) {
+  for(const [m,a,expected] of [[35.4,430,35],[95.6,450,96]]) {
     const b=new TargetTracker(); for(let n=0;n<3;n++) b.update(frequency(m,a),1,.1,a);
     assert.equal(b.midi,expected);
   }
@@ -125,10 +125,37 @@ test('identifies every note from C2 to B6 at supported sample rates and referenc
   }
 });
 
-test('rejects pitches outside the C2–B6 identification margin', () => {
-  for (const midi of [MIN_MIDI - 0.61, MAX_MIDI + 0.61]) {
+test('chromatic tracking has no fixed musical range and still rejects invalid input', () => {
+  for (const midi of [-1, 0, 23, 28, 35, 96, 108, 128]) {
     const tracker = new TargetTracker();
-    for (let frame = 0; frame < 10; frame++) assert.equal(tracker.update(frequency(midi), 1, 0.2, 440), false);
+    for (let frame = 0; frame < 3; frame++) tracker.update(frequency(midi), 1, 0.2, 440);
+    assert.equal(tracker.acquired, true);
+    assert.equal(tracker.midi, midi);
+  }
+  for (const hz of [0, -1, Infinity, NaN]) {
+    const tracker = new TargetTracker();
+    for (let frame = 0; frame < 10; frame++) assert.equal(tracker.update(hz, 1, 0.2, 440), false);
     assert.equal(tracker.acquired, false);
+  }
+});
+
+test('notes outside the old range survive normalization and have valid pitch classes', () => {
+  for (const midi of [-1, 23, 108, 128]) assert.equal(normalizeMidi(midi), midi);
+  assert.equal(pitchClass(-1), 11);
+  assert.equal(pitchClass(128), 8);
+  for (const midi of [NaN, Infinity, 1e100, -1e100]) assert.equal(normalizeMidi(midi), 45);
+});
+
+test('actual pitch detection acquires bass and treble notes beyond C2–B6', () => {
+  const detector = PitchDetector.forFloat32Array(4096);
+  for (const sampleRate of [44100, 48000]) {
+    for (const midi of [23, 28, 35, 96, 100, 108]) {
+      const samples = Float32Array.from({ length: 4096 }, (_, n) => 0.3 * Math.cos(TAU * frequency(midi) * n / sampleRate));
+      const [hz, clarity] = detector.findPitch(samples, sampleRate);
+      const tracker = new TargetTracker();
+      for (let frame = 0; frame < 3; frame++) tracker.update(hz, clarity, 0.2, 440);
+      assert.equal(tracker.acquired, true, `MIDI ${midi}, ${sampleRate} Hz`);
+      assert.equal(tracker.midi, midi);
+    }
   }
 });

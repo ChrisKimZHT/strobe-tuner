@@ -1,14 +1,17 @@
-import { clampMidi } from './audio/dsp';
+import { normalizeMidi } from './audio/dsp';
+import { getInstrument, getTuning } from './tunings';
 
 export type Settings = {
   mode: 'auto' | 'manual';
   midi: number;
   a4: number;
+  instrument: string;
+  tuning: string;
 };
 
 export const MIN_A4 = 430;
 export const MAX_A4 = 450;
-export const DEFAULT_SETTINGS: Settings = { mode: 'auto', midi: 45, a4: 440 };
+export const DEFAULT_SETTINGS: Settings = { mode: 'auto', midi: 45, a4: 440, instrument: 'chromatic', tuning: '' };
 const STORAGE_KEY = 'strobe-tuner.settings.v1';
 
 export function clampA4(value: number) {
@@ -19,9 +22,14 @@ export function loadSettings(): Settings {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if (!saved || typeof saved !== 'object') return { ...DEFAULT_SETTINGS };
+    const instrument = getInstrument(saved.instrument)?.id ?? 'chromatic';
+    const tuning = getTuning(instrument, saved.tuning);
+    const midi = typeof saved.midi === 'number' && Number.isFinite(saved.midi) ? Math.round(saved.midi) : DEFAULT_SETTINGS.midi;
     return {
       mode: saved.mode === 'manual' ? 'manual' : 'auto',
-      midi: typeof saved.midi === 'number' && Number.isFinite(saved.midi) ? clampMidi(saved.midi) : DEFAULT_SETTINGS.midi,
+      midi: tuning ? tuning.notes.includes(midi) ? midi : tuning.notes[0] : normalizeMidi(midi),
+      instrument,
+      tuning: tuning?.id ?? '',
       a4: typeof saved.a4 === 'number' && Number.isFinite(saved.a4) ? clampA4(saved.a4) : DEFAULT_SETTINGS.a4,
     };
   } catch {

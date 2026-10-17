@@ -6,7 +6,7 @@ import {
   IconRotateClockwise, IconRotate, IconX,
 } from '@tabler/icons-react';
 import { LANGUAGES } from './i18n';
-import { NOTE_NAMES } from './audio/dsp';
+import { NOTE_NAMES, pitchClass } from './audio/dsp';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { useTuner } from './useTuner';
 import { StrobeDial } from './StrobeDial';
@@ -91,7 +91,7 @@ export default function App() {
                 {isNeedle ? <NeedleDial cents={snapshot.cents} /> : <StrobeDial engine={engine} />}
                 <div className="note-display">
                   <span className="target-label">{snapshot.locked && <IconLock size={12} />}{t(snapshot.locked ? 'settings.locked' : 'tuner.targetNote')}</span>
-                  <div className="note-value">{NOTE_NAMES[snapshot.midi % 12]}<span>{octave}</span></div>
+                  <div className="note-value">{NOTE_NAMES[pitchClass(snapshot.midi)]}<span>{octave}</span></div>
                   {snapshot.status === 'suspended' ? (
                     <Button variant="subtle" size="compact-xs" style={{ pointerEvents: 'auto' }}
                       onClick={() => void engine.resume()}>{t('transport.resume')}</Button>

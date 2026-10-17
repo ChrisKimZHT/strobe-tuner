@@ -54,7 +54,15 @@
     "pitchSelection": "音高选择",
     "a4": "A4 / Hz",
     "decreaseA4": "降低参考音高",
-    "increaseA4": "提高参考音高"
+    "increaseA4": "提高参考音高",
+    "instrument": "调音模式",
+    "tuning": "定弦",
+    "default": "默认",
+    "notApplicable": "不适用",
+    "stringSelection": "弦选择",
+    "stringCount": "{{count}} 弦",
+    "stringNumber": "{{number}} 弦",
+    "stringNote": "第 {{number}} 弦，{{note}}"
   },
   "errors": {
     "unsupported": "请使用支持 AudioWorklet 的浏览器，并通过 HTTPS 或 localhost 打开。",
@@ -65,7 +73,10 @@
     "startFailed": "无法启动调音，请检查麦克风和浏览器音频权限。",
     "resumeFailed": "恢复音频失败，请刷新页面重试。"
   },
-  "common": { "dismiss": "关闭提示", "retry": "重试" },
+  "common": {
+    "dismiss": "关闭提示",
+    "retry": "重试"
+  },
   "pwa": {
     "label": "应用更新",
     "registrationError": "离线缓存注册失败：",
@@ -75,5 +86,33 @@
     "update": "立即更新",
     "later": "稍后",
     "acknowledge": "知道了"
+  },
+  "instruments": {
+    "chromatic": "十二平均律",
+    "guitar": "吉他（六弦）",
+    "bass": "贝斯（四弦）",
+    "bass5": "贝斯（五弦）",
+    "ukulele": "尤克里里",
+    "violin": "小提琴",
+    "viola": "中提琴",
+    "cello": "大提琴",
+    "doubleBass": "低音提琴"
+  },
+  "tunings": {
+    "standard": "标准定弦",
+    "dropD": "Drop D",
+    "dropC": "Drop C",
+    "halfStepDown": "降半音",
+    "wholeStepDown": "降全音",
+    "dadgad": "DADGAD",
+    "openD": "开放 D",
+    "openG": "开放 G",
+    "openE": "开放 E",
+    "highG": "高 G · GCEA",
+    "lowG": "低 G · GCEA",
+    "baritone": "男中音 · DGBE",
+    "crossA": "交叉 A · AEAE",
+    "crossG": "交叉 G · GDGD",
+    "solo": "独奏 · F♯BEA"
   }
 }

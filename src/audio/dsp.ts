@@ -1,9 +1,12 @@
 export const TAU = 2 * Math.PI;
-export const MIN_MIDI = 36;
-export const MAX_MIDI = 95;
 export const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
-export const clampMidi = (midi: number) => Math.max(MIN_MIDI, Math.min(MAX_MIDI, Math.round(midi)));
 export const frequency = (midi: number, a4 = 440) => a4 * 2 ** ((midi - 69) / 12);
+export const pitchClass = (midi: number) => ((midi % 12) + 12) % 12;
+export function normalizeMidi(midi: number) {
+  const rounded = Math.round(midi);
+  const hz = frequency(rounded);
+  return Number.isFinite(rounded) && Number.isFinite(hz) && hz > 0 ? rounded : 45;
+}
 export const wrap = (phase: number) => Math.atan2(Math.sin(phase), Math.cos(phase));
 
 /** Four matched one-pole stages per quadrature; all state survives block boundaries. */
@@ -79,9 +82,11 @@ export class TargetTracker {
     this.count = 0;
   }
 
-  update(hz: number, clarity: number, rms: number, a4: number) {
+  update(hz: number, clarity: number, rms: number, a4: number, notes?: readonly number[]) {
     const m = 69 + 12 * Math.log2(hz / a4);
-    if (!Number.isFinite(m) || m < MIN_MIDI - 0.6 || m > MAX_MIDI + 0.6 || clarity < 0.9 || rms < 0.002) {
+    const min = notes ? Math.min(...notes) - 2 : -Infinity;
+    const max = notes ? Math.max(...notes) + 2 : Infinity;
+    if (!Number.isFinite(m) || m < min || m > max || clarity < 0.9 || rms < 0.002) {
       this.reset();
       return false;
     }
@@ -89,7 +94,13 @@ export class TargetTracker {
       this.reset();
       return false;
     }
-    const next = clampMidi(m);
+    const next = notes ? notes.reduce((best, note) => Math.abs(note - m) < Math.abs(best - m) ? note : best) : Math.round(m);
+    // Restrict automatic string selection to nearby open strings, with hysteresis.
+    if (notes && (Math.abs(next - m) > 2 || (this.acquired &&
+      (next === this.midi || Math.abs(m - this.midi) <= Math.abs(m - next) + 0.3)))) {
+      this.reset();
+      return false;
+    }
     if (next !== this.candidate) {
       this.candidate = next;
       this.count = 0;

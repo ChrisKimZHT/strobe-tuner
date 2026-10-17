@@ -1,8 +1,9 @@
 import workletUrl from './tuner-worklet.ts?worker&url';
 import { AudioSession } from './AudioSession';
-import { frequency, MAX_MIDI, MIN_MIDI, TargetTracker } from './dsp';
+import { frequency, normalizeMidi, TargetTracker } from './dsp';
 import type { PhaseMessage, PitchRequest, PitchResult, ProcessorMessage } from './messages';
 import { DEFAULT_SETTINGS, type Settings } from '../settings';
+import { getTuning } from '../tunings';
 
 export type TunerStatus = 'stopped' | 'starting' | 'running' | 'suspended';
 export type TunerError = 'unsupported' | 'permissionDenied' | 'deviceUnavailable' | 'deviceEnded'
@@ -47,12 +48,18 @@ export class TunerEngine {
   configure(settings: Settings) {
     const previous = this.settings;
     this.settings = { ...settings };
-    if (previous.mode !== settings.mode) {
+    const tuningChanged = previous.instrument !== settings.instrument || previous.tuning !== settings.tuning;
+    const notes = getTuning(settings.instrument, settings.tuning)?.notes;
+    if (previous.mode !== settings.mode || tuningChanged) {
       this.locked = false;
       this.tracker.acquired = false;
     }
     if (settings.mode === 'manual') this.midi = settings.midi;
-    if (previous.mode !== settings.mode || previous.a4 !== settings.a4 || previous.midi !== settings.midi) {
+    if (tuningChanged) this.midi = notes
+      ? notes.includes(settings.midi) ? settings.midi : notes[0]
+      : normalizeMidi(settings.midi);
+    if (notes && !notes.includes(this.midi)) this.midi = notes[0];
+    if (previous.mode !== settings.mode || previous.a4 !== settings.a4 || previous.midi !== settings.midi || tuningChanged) {
       this.configureTarget();
     }
   }
@@ -122,14 +129,17 @@ export class TunerEngine {
         if (data.revision !== this.revision || this.status !== 'running') return;
         this.lastPitch = performance.now();
         const midi = 69 + 12 * Math.log2(data.hz / this.settings.a4);
+        const notes = getTuning(this.settings.instrument, this.settings.tuning)?.notes;
+        const min = notes ? Math.min(...notes) - 2 : -Infinity;
+        const max = notes ? Math.max(...notes) + 2 : Infinity;
         this.pitchGood = Number.isFinite(midi) && data.clarity >= 0.9 && data.rms > 0.002 &&
-          midi >= MIN_MIDI - 0.6 && midi <= MAX_MIDI + 0.6;
+          midi >= min && midi <= max;
         if (!this.pitchGood) {
           this.tracker.reset();
           this.clearReading();
           return;
         }
-        if (this.settings.mode === 'auto' && !this.locked && this.tracker.update(data.hz, data.clarity, data.rms, this.settings.a4)) {
+        if (this.settings.mode === 'auto' && !this.locked && this.tracker.update(data.hz, data.clarity, data.rms, this.settings.a4, notes)) {
           this.midi = this.tracker.midi;
           this.configureTarget();
           return;

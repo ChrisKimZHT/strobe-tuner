@@ -54,7 +54,15 @@
     "pitchSelection": "Pitch selection",
     "a4": "A4 / Hz",
     "decreaseA4": "Decrease reference pitch",
-    "increaseA4": "Increase reference pitch"
+    "increaseA4": "Increase reference pitch",
+    "instrument": "Tuning mode",
+    "tuning": "Tuning",
+    "default": "Default",
+    "notApplicable": "Not applicable",
+    "stringSelection": "String selection",
+    "stringCount": "{{count}} strings",
+    "stringNumber": "{{number}}",
+    "stringNote": "String {{number}}, {{note}}"
   },
   "errors": {
     "unsupported": "Use a browser with AudioWorklet support over HTTPS or localhost.",
@@ -65,7 +73,10 @@
     "startFailed": "Unable to start tuning. Check your microphone and browser audio permissions.",
     "resumeFailed": "Unable to resume audio. Reload the page to try again."
   },
-  "common": { "dismiss": "Dismiss notification", "retry": "Retry" },
+  "common": {
+    "dismiss": "Dismiss notification",
+    "retry": "Retry"
+  },
   "pwa": {
     "label": "App update",
     "registrationError": "Offline cache registration failed:",
@@ -75,5 +86,33 @@
     "update": "Update now",
     "later": "Later",
     "acknowledge": "Got it"
+  },
+  "instruments": {
+    "chromatic": "Chromatic (12-TET)",
+    "guitar": "Guitar (6-string)",
+    "bass": "Bass (4-string)",
+    "bass5": "Bass (5-string)",
+    "ukulele": "Ukulele",
+    "violin": "Violin",
+    "viola": "Viola",
+    "cello": "Cello",
+    "doubleBass": "Double bass"
+  },
+  "tunings": {
+    "standard": "Standard",
+    "dropD": "Drop D",
+    "dropC": "Drop C",
+    "halfStepDown": "Half step down",
+    "wholeStepDown": "Whole step down",
+    "dadgad": "DADGAD",
+    "openD": "Open D",
+    "openG": "Open G",
+    "openE": "Open E",
+    "highG": "High G · GCEA",
+    "lowG": "Low G · GCEA",
+    "baritone": "Baritone · DGBE",
+    "crossA": "Cross A · AEAE",
+    "crossG": "Cross G · GDGD",
+    "solo": "Solo · F♯BEA"
   }
 }
