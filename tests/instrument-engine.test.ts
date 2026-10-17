@@ -70,6 +70,64 @@ test('saved settings migrate safely and retain valid manual strings below C2', (
   assert.equal(loadSettings({ instrument: 'missing' }).loadSettings().instrument, 'chromatic');
 });
 
+test('saved capo settings restore sounding pitches and safely handle older or invalid values', () => {
+  const guitar = { instrument: 'guitar', tuning: 'standard', mode: 'manual', midi: 66, capo: 2 };
+  const saved = loadSettings(guitar).loadSettings();
+  assert.equal(saved.capo, 2);
+  assert.equal(saved.midi, 66);
+  const { engine } = createEngine();
+  engine.configure(saved);
+  assert.equal(engine.snapshot(100).midi, 66);
+  assert.equal(loadSettings({ instrument: 'guitar', midi: 64 }).loadSettings().capo, 0);
+  for (const [capo, expected] of [[-1, 0], [99, 12], [2.6, 3], ['2', 0], [null, 0]]) {
+    assert.equal(loadSettings({ ...guitar, capo }).loadSettings().capo, expected);
+  }
+  const bass = loadSettings({ ...guitar, instrument: 'bass' }).loadSettings();
+  assert.equal(bass.capo, 0);
+  assert.equal(bass.midi, 28);
+});
+
+test('capo shifts automatic and manual targets, clears locks and restores open strings when removed', async () => {
+  const { engine, defaults, pitch } = createEngine();
+  const guitar = { ...defaults, instrument: 'guitar', tuning: 'standard', midi: 40 };
+  engine.configure(guitar);
+  await engine.start();
+  pitch(64);
+  engine.setLocked(true);
+
+  const capo = { ...guitar, capo: 2, midi: 66 };
+  engine.configure(capo);
+  assert.equal(engine.snapshot(100).locked, false);
+  assert.equal(engine.snapshot(100).canLock, false);
+  assert.equal(engine.snapshot(100).measured, null);
+  assert.equal(engine.snapshot(100).midi, 66);
+  assert.equal(engine.snapshot(100).target, dsp.frequency(66));
+  for (const midi of [42, 47, 52, 57, 61, 66]) {
+    pitch(midi + 0.1);
+    assert.equal(engine.snapshot(100).midi, midi);
+    assert.ok(Math.abs(engine.snapshot(100).cents - 10) < 0.001);
+  }
+  engine.configure({ ...capo, mode: 'manual', midi: 47, a4: 442 });
+  assert.equal(engine.snapshot(100).target, dsp.frequency(47, 442));
+  pitch(66);
+  assert.equal(engine.snapshot(100).midi, 47);
+
+  engine.configure({ ...capo, tuning: 'dropD', midi: 40 });
+  pitch(40);
+  assert.equal(engine.snapshot(100).midi, 40);
+  engine.configure({ ...guitar, capo: 12, midi: 52 });
+  pitch(76);
+  assert.equal(engine.snapshot(100).midi, 76);
+
+  engine.configure(guitar);
+  pitch(64);
+  assert.equal(engine.snapshot(100).midi, 64);
+  engine.configure({ ...defaults, instrument: 'bass', tuning: 'standard', midi: 28 });
+  pitch(28);
+  assert.equal(engine.snapshot(100).midi, 28);
+  await engine.stop();
+});
+
 test('chromatic engine and saved manual targets retain pitches outside C2–B6', async () => {
   const { engine, defaults, pitch } = createEngine();
   engine.configure(defaults);

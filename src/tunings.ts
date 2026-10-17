@@ -44,9 +44,22 @@ export function getInstrument(id: string) {
   return INSTRUMENTS.find((instrument) => instrument.id === id);
 }
 
-export function getTuning(instrument: string, tuning: string) {
+export const MAX_CAPO_FRET = 12;
+
+export function supportsCapo(instrument: string) {
+  return instrument === 'guitar' || instrument === 'guitar7';
+}
+
+export function normalizeCapo(instrument: string, fret: unknown) {
+  return supportsCapo(instrument) && typeof fret === 'number' && Number.isFinite(fret)
+    ? Math.max(0, Math.min(MAX_CAPO_FRET, Math.round(fret))) : 0;
+}
+
+export function getTuning(instrument: string, tuning: string, capo = 0) {
   const presets = getInstrument(instrument)?.tunings;
-  return presets?.find((preset) => preset.id === tuning) ?? presets?.[0];
+  const preset = presets?.find((preset) => preset.id === tuning) ?? presets?.[0];
+  const fret = normalizeCapo(instrument, capo);
+  return preset && fret ? { ...preset, notes: preset.notes.map((midi) => midi + fret) } : preset;
 }
 
 export function noteLabel(midi: number) {

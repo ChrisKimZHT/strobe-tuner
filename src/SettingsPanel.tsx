@@ -4,7 +4,7 @@ import { IconLock, IconMinus, IconPlus } from '@tabler/icons-react';
 import { normalizeMidi, pitchClass, NOTE_NAMES } from './audio/dsp';
 import type { TunerEngine, TunerSnapshot } from './audio/TunerEngine';
 import { clampA4, DEFAULT_SETTINGS, MAX_A4, MIN_A4, type Settings } from './settings';
-import { getInstrument, getTuning, INSTRUMENTS, noteLabel } from './tunings';
+import { getInstrument, getTuning, INSTRUMENTS, MAX_CAPO_FRET, noteLabel, supportsCapo } from './tunings';
 
 const WHITE_KEYS = [0, 2, 4, 5, 7, 9, 11];
 
@@ -28,7 +28,8 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
   });
   const manual = settings.mode === 'manual';
   const instrument = getInstrument(settings.instrument);
-  const tuning = getTuning(settings.instrument, settings.tuning);
+  const hasCapo = supportsCapo(settings.instrument);
+  const tuning = getTuning(settings.instrument, settings.tuning, settings.capo);
   const strings = tuning?.notes.map((midi, index) => ({ midi, number: tuning.notes.length - index }))
     .sort((a, b) => a.midi - b.midi);
 
@@ -42,7 +43,7 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
         }}>{t('settings.reset')}</Button>
       </div>
 
-      <div className="instrument-settings">
+      <div className={`instrument-settings${hasCapo ? ' instrument-settings--capo' : ''}`}>
         <NativeSelect
           label={t('settings.instrument')}
           value={settings.instrument}
@@ -50,7 +51,7 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
           onChange={(event) => {
             const id = event.currentTarget.value;
             const preset = getInstrument(id)?.tunings[0];
-            update({ instrument: id, tuning: preset?.id ?? '', midi: preset?.notes[0] ?? normalizeMidi(snapshot.midi) });
+            update({ instrument: id, tuning: preset?.id ?? '', capo: 0, midi: preset?.notes[0] ?? normalizeMidi(snapshot.midi) });
           }}
         />
         <NativeSelect
@@ -62,10 +63,24 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
             label: t(`tunings.${preset.id}`, { defaultValue: preset.id }),
           })) : [{ value: '', label: t('settings.notApplicable') }]}
           onChange={(event) => {
-            const preset = getTuning(settings.instrument, event.currentTarget.value)!;
+            const preset = getTuning(settings.instrument, event.currentTarget.value, settings.capo)!;
             update({ tuning: preset.id, midi: preset.notes[0] });
           }}
         />
+        {hasCapo && <NativeSelect
+          label={t('settings.capo')}
+          value={settings.capo}
+          data={Array.from({ length: MAX_CAPO_FRET + 1 }, (_, fret) => ({
+            value: String(fret),
+            label: fret === 0 ? t('settings.noCapo') : t('settings.capoFret', { fret }),
+          }))}
+          onChange={(event) => {
+            const capo = Number(event.currentTarget.value);
+            const preset = getTuning(settings.instrument, settings.tuning, capo)!;
+            const stringIndex = tuning?.notes.indexOf(snapshot.midi) ?? -1;
+            update({ capo, midi: preset.notes[Math.max(0, stringIndex)] });
+          }}
+        />}
       </div>
 
       <div className="settings-section target-settings">

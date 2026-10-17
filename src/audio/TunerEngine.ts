@@ -48,8 +48,8 @@ export class TunerEngine {
   configure(settings: Settings) {
     const previous = this.settings;
     this.settings = { ...settings };
-    const tuningChanged = previous.instrument !== settings.instrument || previous.tuning !== settings.tuning;
-    const notes = getTuning(settings.instrument, settings.tuning)?.notes;
+    const tuningChanged = previous.instrument !== settings.instrument || previous.tuning !== settings.tuning || previous.capo !== settings.capo;
+    const notes = getTuning(settings.instrument, settings.tuning, settings.capo)?.notes;
     if (previous.mode !== settings.mode || tuningChanged) {
       this.locked = false;
       this.tracker.acquired = false;
@@ -129,7 +129,7 @@ export class TunerEngine {
         if (data.revision !== this.revision || this.status !== 'running') return;
         this.lastPitch = performance.now();
         const midi = 69 + 12 * Math.log2(data.hz / this.settings.a4);
-        const notes = getTuning(this.settings.instrument, this.settings.tuning)?.notes;
+        const notes = getTuning(this.settings.instrument, this.settings.tuning, this.settings.capo)?.notes;
         const min = notes ? Math.min(...notes) - 2 : -Infinity;
         const max = notes ? Math.max(...notes) + 2 : Infinity;
         this.pitchGood = Number.isFinite(midi) && data.clarity >= 0.9 && data.rms > 0.002 &&

@@ -4,6 +4,19 @@ import { PitchDetector } from 'pitchy';
 import { INSTRUMENTS, getTuning, noteLabel } from '../src/tunings.ts';
 import { frequency, PhaseDemodulator, TargetTracker, TAU } from '../src/audio/dsp.ts';
 
+test('capo transposes guitar presets without mutating them or changing other instruments', () => {
+  for (const instrument of INSTRUMENTS) {
+    for (const tuning of instrument.tunings) {
+      for (let capo = 0; capo <= 12; capo++) {
+        const notes = getTuning(instrument.id, tuning.id, capo)!.notes;
+        const offset = ['guitar', 'guitar7'].includes(instrument.id) ? capo : 0;
+        assert.deepEqual(notes, tuning.notes.map((midi) => midi + offset));
+      }
+    }
+  }
+  assert.deepEqual(getTuning('guitar', 'standard')!.notes, [40, 45, 50, 55, 59, 64]);
+});
+
 test('every preset open string is detected at supported sample rates and A4 references', () => {
   const detector = PitchDetector.forFloat32Array(4096);
   const samples = new Float32Array(4096);

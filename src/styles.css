@@ -440,6 +440,15 @@ a:focus-visible {
   margin-bottom: 6px;
 }
 
+.instrument-settings--capo {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.instrument-settings > * {
+  min-width: 0;
+}
+
 .instrument-settings select {
   font-size: 12px;
 }
