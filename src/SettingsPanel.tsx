@@ -57,9 +57,9 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
           label={t('settings.tuning')}
           value={tuning?.id ?? ''}
           disabled={!instrument}
-          data={instrument ? instrument.tunings.map((preset, index) => ({
+          data={instrument ? instrument.tunings.map((preset) => ({
             value: preset.id,
-            label: `${t(`tunings.${preset.id}`, { defaultValue: preset.id })}${index === 0 ? ` · ${t('settings.default')}` : ''}`,
+            label: t(`tunings.${preset.id}`, { defaultValue: preset.id }),
           })) : [{ value: '', label: t('settings.notApplicable') }]}
           onChange={(event) => {
             const preset = getTuning(settings.instrument, event.currentTarget.value)!;

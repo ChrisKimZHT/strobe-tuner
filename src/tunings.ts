@@ -14,6 +14,7 @@ export const INSTRUMENTS: readonly Instrument[] = [
     { id: 'openG', notes: [38, 43, 50, 55, 59, 62] },
     { id: 'openE', notes: [40, 47, 52, 56, 59, 64] },
   ] },
+  { id: 'guitar7', tunings: [{ id: 'standard', notes: [35, 40, 45, 50, 55, 59, 64] }] },
   { id: 'bass', tunings: [
     { id: 'standard', notes: [28, 33, 38, 43] },
     { id: 'dropD', notes: [26, 33, 38, 43] },
