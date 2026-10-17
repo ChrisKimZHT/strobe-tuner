@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { ActionIcon, Button, NativeSelect, SegmentedControl, Slider } from '@mantine/core';
-import { IconLock, IconLockOpen, IconMinus, IconPlus } from '@tabler/icons-react';
+import { IconLock, IconMinus, IconPlus } from '@tabler/icons-react';
 import { normalizeMidi, pitchClass, NOTE_NAMES } from './audio/dsp';
 import type { TunerEngine, TunerSnapshot } from './audio/TunerEngine';
 import { clampA4, DEFAULT_SETTINGS, MAX_A4, MIN_A4, type Settings } from './settings';
@@ -93,7 +93,7 @@ export function SettingsPanel({ settings, snapshot, update, engine }: Props) {
             title={t(snapshot.locked ? 'settings.unlock' : 'settings.lock')}
             aria-pressed={snapshot.locked}
             onClick={() => engine.setLocked(!snapshot.locked)}
-          >{snapshot.locked ? <IconLockOpen size={18} /> : <IconLock size={18} />}</ActionIcon>
+          ><IconLock size={18} /></ActionIcon>
         </div>
 
         <div className="note-controls">

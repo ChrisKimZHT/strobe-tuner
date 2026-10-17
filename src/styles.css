@@ -107,7 +107,7 @@ a:focus-visible {
 
 .tuner-panel,
 .settings-panel {
-  padding: 23px 20px;
+  padding: 23px 20px 12px;
   min-width: 0;
 }
 
@@ -121,7 +121,7 @@ a:focus-visible {
   flex: 1;
   flex-direction: column;
   justify-content: center;
-  padding-block: 20px;
+  padding-block: 12px;
 }
 
 .settings-panel {
@@ -324,7 +324,7 @@ a:focus-visible {
 .readings {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 18px 0;
+  padding: 18px 0 16px;
   border-top: 1px solid var(--mantine-color-gray-2);
 }
 
@@ -725,7 +725,7 @@ a:focus-visible {
 
   .tuner-panel,
   .settings-panel {
-    padding: 23px;
+    padding: 23px 23px 12px;
   }
 
   .dial,
@@ -750,7 +750,7 @@ a:focus-visible {
 
   .tuner-panel,
   .settings-panel {
-    padding: 20px 16px;
+    padding: 20px 16px 12px;
   }
 
   .brand {
