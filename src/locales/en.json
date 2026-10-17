@@ -7,6 +7,12 @@
   },
   "tuner": {
     "title": "Tuner",
+    "displayMode": "Tuner display mode",
+    "strobeMode": "Strobe",
+    "needleMode": "Needle",
+    "needleDial": "Needle tuner: minus 50 to plus 50 cents, flat to the left, sharp to the right, centered when in tune; beyond the scale the needle stays at the edge, refer to the offset reading",
+    "needleTracking": "Tracking pitch",
+    "inTune": "In tune",
     "targetNote": "Target note",
     "dial": "Two strobe rings rotating together, with twice as many blocks on the outer ring: flat rotates counterclockwise, sharp rotates clockwise, matching pitch approaches a standstill",
     "flat": "Flat",

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActionIcon, Button, Menu } from '@mantine/core';
 import {
-  IconCheck, IconChevronDown, IconLanguage, IconLock,
+  IconArrowLeft, IconArrowRight, IconCheck, IconChevronDown, IconGauge, IconLanguage, IconLock,
   IconRotateClockwise, IconRotate, IconX,
 } from '@tabler/icons-react';
 import { LANGUAGES } from './i18n';
@@ -10,6 +10,7 @@ import { NOTE_NAMES } from './audio/dsp';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { useTuner } from './useTuner';
 import { StrobeDial } from './StrobeDial';
+import { NeedleDial } from './NeedleDial';
 import { SettingsPanel } from './SettingsPanel';
 import { PwaStatus } from './PwaStatus';
 import { version } from '../package.json';
@@ -17,7 +18,10 @@ import { version } from '../package.json';
 export default function App() {
   const { t, i18n } = useTranslation();
   const [settings, setSettings] = useState(loadSettings);
+  const [displayMode, setDisplayMode] = useState<'strobe' | 'needle'>('strobe');
   const { engine, snapshot } = useTuner(settings);
+  const isNeedle = displayMode === 'needle';
+  const inTune = isNeedle && snapshot.cents !== null && Math.abs(snapshot.cents) <= 3;
   const octave = Math.floor(snapshot.midi / 12) - 1;
   const update = useCallback((patch: Partial<Settings>) => {
     setSettings((current) => ({ ...current, ...patch }));
@@ -72,28 +76,38 @@ export default function App() {
           <section className="tuner-panel" aria-labelledby="tuner-title">
             <div className="panel-heading">
               <h2 id="tuner-title">{t('tuner.title')}</h2>
-              {snapshot.status === 'suspended' ? (
-                <Button variant="subtle" size="compact-xs" onClick={() => void engine.resume()}>{t('transport.resume')}</Button>
-              ) : <span className={`status ${snapshot.status === 'running' ? 'is-running' : ''}`} role="status">
-                <i />{t(`status.${snapshot.status}`)}
-              </span>}
+              <div className="display-mode-switch" role="group" aria-label={t('tuner.displayMode')}>
+                <button type="button" aria-pressed={!isNeedle} onClick={() => setDisplayMode('strobe')}>
+                  <IconRotateClockwise size={15} aria-hidden="true" />{t('tuner.strobeMode')}
+                </button>
+                <button type="button" aria-pressed={isNeedle} onClick={() => setDisplayMode('needle')}>
+                  <IconGauge size={15} aria-hidden="true" />{t('tuner.needleMode')}
+                </button>
+              </div>
             </div>
 
             <div className="tuner-visual">
-              <div className="dial">
-                <StrobeDial engine={engine} />
+              <div className={`dial ${isNeedle ? 'dial--needle' : ''} ${inTune ? 'is-in-tune' : ''}`}>
+                {isNeedle ? <NeedleDial cents={snapshot.cents} /> : <StrobeDial engine={engine} />}
                 <div className="note-display">
                   <span className="target-label">{snapshot.locked && <IconLock size={12} />}{t(snapshot.locked ? 'settings.locked' : 'tuner.targetNote')}</span>
                   <div className="note-value">{NOTE_NAMES[snapshot.midi % 12]}<span>{octave}</span></div>
-                  <span className={`signal-quality ${snapshot.valid ? 'is-tracking' : ''}`}>
-                    {snapshot.status === 'running' ? t(`tuner.${snapshot.signal}`) : t('tuner.ready')}
-                  </span>
+                  {snapshot.status === 'suspended' ? (
+                    <Button variant="subtle" size="compact-xs" style={{ pointerEvents: 'auto' }}
+                      onClick={() => void engine.resume()}>{t('transport.resume')}</Button>
+                  ) : <span className={`signal-quality ${snapshot.valid ? 'is-tracking' : ''}`}>
+                    {snapshot.status === 'running'
+                      ? t(`tuner.${isNeedle && snapshot.cents !== null
+                        ? inTune ? 'inTune' : 'needleTracking'
+                        : snapshot.signal}`)
+                      : t('tuner.ready')}
+                  </span>}
                 </div>
               </div>
 
               <div className="direction" aria-hidden="true">
-                <span><IconRotate size={14} />{t('tuner.flat')}</span>
-                <span>{t('tuner.sharp')}<IconRotateClockwise size={14} /></span>
+                <span>{isNeedle ? <IconArrowLeft size={14} /> : <IconRotate size={14} />}{t('tuner.flat')}</span>
+                <span>{t('tuner.sharp')}{isNeedle ? <IconArrowRight size={14} /> : <IconRotateClockwise size={14} />}</span>
               </div>
             </div>
             <div className="readings">
