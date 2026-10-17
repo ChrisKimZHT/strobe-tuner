@@ -38,13 +38,13 @@ a:focus-visible {
 }
 
 .app-shell {
-  max-width: 1060px;
-  padding: 0 48px 16px;
+  max-width: 900px;
+  padding: 0 20px 12px;
   margin: 0 auto;
 }
 
 .site-header {
-  height: 80px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -73,7 +73,7 @@ a:focus-visible {
 
 .brand-text h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
   line-height: 26px;
 }
@@ -97,9 +97,9 @@ a:focus-visible {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 421px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   border: 1px solid var(--mantine-color-default-border);
-  border-radius: 20px;
+  border-radius: 16px;
   background: var(--mantine-color-body);
   overflow: hidden;
   box-shadow: var(--mantine-shadow-xs);
@@ -107,7 +107,7 @@ a:focus-visible {
 
 .tuner-panel,
 .settings-panel {
-  padding: 27px 30px 21px;
+  padding: 23px 20px;
   min-width: 0;
 }
 
@@ -127,13 +127,6 @@ a:focus-visible {
 .settings-panel {
   border-left: 1px solid var(--mantine-color-default-border);
   background: var(--mantine-color-gray-0);
-}
-
-.settings-panel>.panel-heading,
-.settings-panel>.settings-section {
-  width: 100%;
-  max-width: 360px;
-  margin-inline: auto;
 }
 
 .panel-heading {
@@ -290,7 +283,7 @@ a:focus-visible {
   display: flex;
   align-items: baseline;
   color: var(--mantine-primary-color-filled);
-  font-size: 88px;
+  font-size: 72px;
   font-weight: 500;
   line-height: 1.25;
   letter-spacing: -4px;
@@ -353,7 +346,7 @@ a:focus-visible {
 }
 
 .readings output {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
@@ -652,28 +645,23 @@ a:focus-visible {
   gap: 8px;
 }
 
-@media (width < 940px) {
+@media (width <= 700px) {
   .app-shell {
-    max-width: 448px;
-    padding: 0 20px 12px;
-  }
-
-  .site-header {
-    height: 68px;
-  }
-
-  .brand-text h1 {
-    font-size: 22px;
+    max-width: 500px;
   }
 
   .workspace {
     grid-template-columns: 1fr;
-    border-radius: 16px;
   }
 
   .tuner-panel,
   .settings-panel {
     padding: 23px;
+  }
+
+  .dial,
+  .direction {
+    width: min(100%, 420px);
   }
 
   .settings-panel {
@@ -714,10 +702,6 @@ a:focus-visible {
   }
 
   .note-value>span {
-    font-size: 24px;
-  }
-
-  .readings output {
     font-size: 24px;
   }
 
